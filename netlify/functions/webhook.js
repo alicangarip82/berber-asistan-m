@@ -1,6 +1,4 @@
 // Berber Onayla / Reddet dugmesine basinca calisir.
-// Netlify > Environment variables: WHATSAPP_TOKEN, WHATSAPP_PHONE_ID, WEBHOOK_VERIFY_TOKEN
-// Istege bagli ama onerilir: META_APP_SECRET (sahte istekleri engeller)
 const crypto = require("crypto");
 
 exports.handler = async (event) => {
@@ -44,15 +42,18 @@ exports.handler = async (event) => {
     const onay = kod === "ok";
     let musteriye = null;
     if (bilgi && /^\d{10,15}$/.test(bilgi.tel)) {
-      try {
-        const r = await gonder({
-          to: bilgi.tel, type: "template",
-          template: { name: "randevu_sonucu", language: { code: "tr" },
-            components: [{ type: "body", parameters: [bilgi.zaman, onay ? "onaylandı" : "maalesef onaylanamadı"].map(t => ({ type: "text", text: t })) }] }
-        });
-        musteriye = r.ok;
-        if (!r.ok) console.error("Musteriye gonderilemedi", r.status, await r.text());
-      } catch (e) { console.error(e); musteriye = false; }
+      for (const ad of ["randevu_sonucu_b", "randevu_sonucu"]) {
+        try {
+          const r = await gonder({
+            to: bilgi.tel, type: "template",
+            template: { name: ad, language: { code: "tr" },
+              components: [{ type: "body", parameters: [bilgi.zaman, onay ? "onaylandı" : "maalesef onaylanamadı"].map(t => ({ type: "text", text: t })) }] }
+          });
+          musteriye = r.ok;
+          if (r.ok) break;
+          console.error("Sablon " + ad + " gonderilemedi", r.status, await r.text());
+        } catch (e) { console.error(e); musteriye = false; }
+      }
     }
     const not = musteriye === true ? " Müşteriye bildirildi." : musteriye === false ? " Müşteriye iletilemedi, kendisini arayın." : "";
     try { await gonder({ to: m.from, type: "text", text: { body: (onay ? "✅ Randevu onaylandı." : "❌ Randevu reddedildi.") + not } }); } catch (e) { console.error(e); }
