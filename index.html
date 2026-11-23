@@ -96,7 +96,8 @@ var AYAR = {
 // ===============================================
 var $ = function(i){return document.getElementById(i)};
 var ADIMLAR = ["Hizmet", "Tarih", "Onay"];
-var adim = 0, sec = {hizmet: null, gun: null, saat: null}, isim = "";
+var adim = 0, sec = {hizmet: null, gun: null, saat: null}, isim = "", tel = "";
+function telNorm(s){var d=String(s).replace(/\D/g,"");if(d.length===10&&d.charAt(0)==="5")return "90"+d;if(d.length===11&&d.slice(0,2)==="05")return "90"+d.slice(1);if(d.length===12&&d.slice(0,3)==="905")return d;return ""}
 
 $("ad").textContent = AYAR.ad; document.title = AYAR.ad + " · Randevu";
 if(AYAR.kapaklar&&AYAR.kapaklar.length){AYAR.kapaklar.forEach(function(s){var i=document.createElement("img");i.src=s;i.alt="";$("hero").appendChild(i)});$("hero").hidden=false}
@@ -158,15 +159,16 @@ function ciz(){
     if(sec.gun===null){$("saat").innerHTML='<span class="empty">Önce gün seçin</span>'}else{saatler($("saat"))}
   }else{
     var h=AYAR.hizmetler[sec.hizmet];
-    p.innerHTML='<h2>Bilgileriniz</h2><p class="sub">Randevu özetini kontrol edip adınızı yazın.</p><div class="sum"><div><span>Hizmet</span><b id="s1"></b></div><div><span>Tarih</span><b id="s2"></b></div><div><span>Saat</span><b id="s3"></b></div></div><input id="isim" placeholder="Ad Soyad" autocomplete="off" name="musteri-ad">';
+    p.innerHTML='<h2>Bilgileriniz</h2><p class="sub">Randevu özetini kontrol edip adınızı yazın.</p><div class="sum"><div><span>Hizmet</span><b id="s1"></b></div><div><span>Tarih</span><b id="s2"></b></div><div><span>Saat</span><b id="s3"></b></div></div><input id="isim" placeholder="Ad Soyad" autocomplete="off" name="musteri-ad"><input id="tel" placeholder="Telefon (05xx xxx xx xx)" inputmode="tel" autocomplete="off" name="musteri-tel" style="margin-top:10px"><p class="sub" style="margin:8px 0 0;font-size:13px">Randevu sonucu bu numaraya WhatsApp’tan gelecek.</p>';
     $("s1").textContent=h.ad+" · "+h.fiyat;$("s2").textContent=tarihYazi(gunler[sec.gun]);$("s3").textContent=sec.saat;
     $("isim").value=isim;$("isim").oninput=function(){isim=this.value;kontrol()};
+    $("tel").value=tel;$("tel").oninput=function(){tel=this.value;kontrol()};
   }
   kontrol();
 }
 
 function kontrol(){
-  var ok=adim===0?sec.hizmet!==null:adim===1?(sec.gun!==null&&!!sec.saat):isim.trim().length>1;
+  var ok=adim===0?sec.hizmet!==null:adim===1?(sec.gun!==null&&!!sec.saat):isim.trim().length>1&&telNorm(tel)!=="";
   $("ileri").disabled=!ok;
 }
 
@@ -176,7 +178,7 @@ $("ileri").onclick=function(){
   var h=AYAR.hizmetler[sec.hizmet],tarih=tarihYazi(gunler[sec.gun]),btn=$("ileri");
   btn.disabled=true;btn.textContent="GÖNDERİLİYOR…";
   fetch("/.netlify/functions/randevu",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({isim:isim.trim(),hizmet:h.ad+" ("+h.fiyat+")",tarih:tarih,saat:sec.saat,website:$("bal").value})})
+    body:JSON.stringify({isim:isim.trim(),telefon:telNorm(tel),hizmet:h.ad+" ("+h.fiyat+")",tarih:tarih,saat:sec.saat,website:$("bal").value})})
   .then(function(r){return r.json().then(function(d){return r.ok&&d.ok})})
   .then(function(ok){
     if(!ok)throw new Error("fail");
