@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Randevu Al</title>
+<title>Randevu Al · Demo</title>
 <style>
 :root{--bg:#f6f4f0;--card:#fff;--tx:#1d1d1f;--mu:#6b6b70;--ac:#b8742a;--ac-tx:#fff;--bd:#e2ded7;--dis:#ece9e3;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -54,12 +54,16 @@ input{width:100%;font:inherit;padding:13px;border:1.5px solid var(--bd);border-r
 .err{color:#c0392b;font-size:14px;text-align:center;margin:12px 0 0}
 .err a{color:var(--ac)}
 [hidden]{display:none!important}
+.demo{background:var(--ac);color:var(--ac-tx);font-size:12px;font-weight:700;text-align:center;border-radius:8px;padding:6px;margin:-4px 0 12px;letter-spacing:.04em}
+.wa{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;text-align:left;white-space:pre-line;font-size:15px;margin:6px 0}
+.wab{display:flex;gap:8px;margin:0 0 14px}.wab span{flex:1;text-align:center;border:1.5px solid var(--bd);border-radius:10px;padding:10px;color:var(--ac);font-weight:600;font-size:14px}
 .okw{text-align:center;padding-top:60px}.okw .big{font-size:64px}
 </style>
 </head>
 <body>
 <div class="w" id="app">
   <header class="top"><div class="logo" id="logo"></div><div class="brand" id="ad"></div></header>
+  <div class="demo">DEMO · Gerçek randevu oluşturulmaz</div>
   <div class="hero" id="hero" hidden></div>
   <div class="steps" id="steps"></div>
   <div class="card" id="panel"></div>
@@ -68,9 +72,12 @@ input{width:100%;font:inherit;padding:13px;border:1.5px solid var(--bd);border-r
 </div>
 <div class="w okw" id="ok" hidden>
   <div class="big">✅</div>
-  <h2>Randevu talebiniz iletildi</h2>
+  <h2>Demo tamamlandı</h2>
   <p class="sub" id="okozet"></p>
-  <p class="sub">Berber talebinizi inceleyecek.</p>
+  <p class="sub">Gerçek sistemde berberin WhatsApp’ına şöyle bir mesaj düşer:</p>
+  <div class="wa" id="demoMsg"></div>
+  <div class="wab"><span>Onayla</span><span>Reddet</span></div>
+  <p class="sub">Berber <b>Onayla</b>’ya basınca müşteriye WhatsApp’tan “randevunuz onaylandı” mesajı gider.</p>
   <button class="go" id="yeni" type="button">Yeni randevu al</button>
 </div>
 <input id="bal" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
@@ -80,7 +87,7 @@ input{width:100%;font:inherit;padding:13px;border:1.5px solid var(--bd);border-r
 var AYAR = {
   ad: "Berber Asistanım",
   logo: "",                  // logo adresi; boşsa baş harfler görünür
-  kapaklar: ["kapak1.jpg", "kapak2.jpg", "kapak3.jpg"],   // üstteki fotoğraflar, her adım için bir tane; kullanmak istemezseniz: []
+  kapaklar: ["../kapak1.jpg", "../kapak2.jpg", "../kapak3.jpg"],   // üstteki fotoğraflar, her adım için bir tane; kullanmak istemezseniz: []
   telefon: "905526162409",   // sadece sunucu hata verirse yedek WhatsApp bağlantısı için
   acilis: "09:00", kapanis: "19:00", aralik: 30,   // dakika
   molaBaslangic: "13:00", molaBitis: "14:00",      // mola yoksa ikisini de "" yapın
@@ -96,7 +103,7 @@ var AYAR = {
 // ===============================================
 var $ = function(i){return document.getElementById(i)};
 var ADIMLAR = ["Hizmet", "Tarih", "Onay"];
-var adim = 0, sec = {hizmet: null, gun: null, saat: null}, isim = "", tel = "";
+var adim = 0, sec = {hizmet: null, gun: null, saat: null}, isim = "", tel = "", sonHata = "";
 function telNorm(s){var d=String(s).replace(/\D/g,"");if(d.length===10&&d.charAt(0)==="5")return "90"+d;if(d.length===11&&d.slice(0,2)==="05")return "90"+d.slice(1);if(d.length===12&&d.slice(0,3)==="905")return d;return ""}
 
 $("ad").textContent = AYAR.ad; document.title = AYAR.ad + " · Randevu";
@@ -159,7 +166,7 @@ function ciz(){
     if(sec.gun===null){$("saat").innerHTML='<span class="empty">Önce gün seçin</span>'}else{saatler($("saat"))}
   }else{
     var h=AYAR.hizmetler[sec.hizmet];
-    p.innerHTML='<h2>Bilgileriniz</h2><p class="sub">Randevu özetini kontrol edip adınızı yazın.</p><div class="sum"><div><span>Hizmet</span><b id="s1"></b></div><div><span>Tarih</span><b id="s2"></b></div><div><span>Saat</span><b id="s3"></b></div></div><input id="isim" placeholder="Ad Soyad" autocomplete="off" name="musteri-ad"><input id="tel" placeholder="Telefon (05xx xxx xx xx)" inputmode="tel" autocomplete="off" name="musteri-tel" style="margin-top:10px"><p class="sub" style="margin:8px 0 0;font-size:13px">Randevu sonucu bu numaraya WhatsApp’tan gelecek.</p>';
+    p.innerHTML='<h2>Bilgileriniz</h2><p class="sub">Randevu özetini kontrol edip adınızı yazın.</p><div class="sum"><div><span>Hizmet</span><b id="s1"></b></div><div><span>Tarih</span><b id="s2"></b></div><div><span>Saat</span><b id="s3"></b></div></div><input id="isim" placeholder="Ad Soyad" autocomplete="off" name="musteri-ad"><input id="tel" placeholder="Telefon (05xx xxx xx xx)" inputmode="tel" autocomplete="off" name="musteri-tel" style="margin-top:10px"><p class="sub" style="margin:8px 0 0;font-size:13px">Demo sürümü: bilgileriniz hiçbir yere gönderilmez. Gerçek sistemde randevu sonucu bu numaraya WhatsApp’tan gelir.</p>';
     $("s1").textContent=h.ad+" · "+h.fiyat;$("s2").textContent=tarihYazi(gunler[sec.gun]);$("s3").textContent=sec.saat;
     $("isim").value=isim;$("isim").oninput=function(){isim=this.value;kontrol()};
     $("tel").value=tel;$("tel").oninput=function(){tel=this.value;kontrol()};
@@ -177,20 +184,11 @@ $("ileri").onclick=function(){
   if(adim<2){adim++;ciz();return}
   var h=AYAR.hizmetler[sec.hizmet],tarih=tarihYazi(gunler[sec.gun]),btn=$("ileri");
   btn.disabled=true;btn.textContent="GÖNDERİLİYOR…";
-  fetch("/.netlify/functions/randevu",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({isim:isim.trim(),telefon:telNorm(tel),hizmet:h.ad+" ("+h.fiyat+")",tarih:tarih,saat:sec.saat,website:$("bal").value})})
-  .then(function(r){return r.json().then(function(d){return r.ok&&d.ok})})
-  .then(function(ok){
-    if(!ok)throw new Error("fail");
-    $("app").hidden=true;$("okozet").textContent=h.ad+" · "+tarih+" · "+sec.saat;$("ok").hidden=false;
-  })
-  .catch(function(){
-    btn.disabled=false;btn.textContent="RANDEVUYU GÖNDER";
-    var msg="Merhaba, randevu almak istiyorum.\n\nAd: "+isim.trim()+"\nHizmet: "+h.ad+"\nTarih: "+tarih+"\nSaat: "+sec.saat;
-    var e=$("hata");e.innerHTML="Gönderilemedi. Tekrar deneyin ya da <a target=\"_blank\" rel=\"noopener\">WhatsApp’tan yazın</a>.";
-    e.querySelector("a").href="https://wa.me/"+AYAR.telefon.replace(/\D/g,"")+"?text="+encodeURIComponent(msg);
-    e.hidden=false;
-  });
+  setTimeout(function(){
+    $("app").hidden=true;$("okozet").textContent=h.ad+" · "+tarih+" · "+sec.saat;
+    $("demoMsg").textContent="Yeni randevu talebi\n\nMüşteri: "+isim.trim()+" ("+telNorm(tel)+")\nHizmet: "+h.ad+" ("+h.fiyat+")\nTarih: "+tarih+"\nSaat: "+sec.saat+"\n\nOnaylıyor musunuz?";
+    $("ok").hidden=false;window.scrollTo(0,0);
+  },900);
 };
 $("yeni").onclick=function(){location.reload()};
 ciz();
